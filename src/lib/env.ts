@@ -25,4 +25,10 @@ export const env = {
   get AGENT_OFFLINE_AFTER_SECONDS(): number {
     return Number(process.env.AGENT_OFFLINE_AFTER_SECONDS ?? 60);
   },
+  get CHATWORK_API_KEY(): string {
+    return process.env.CHATWORK_API_KEY ?? '';
+  },
+  get CHATWORK_ROOM_ID(): string {
+    return process.env.CHATWORK_ROOM_ID ?? '';
+  },
 };

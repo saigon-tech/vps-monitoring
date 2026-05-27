@@ -21,6 +21,10 @@ export interface IAgent {
   lastTelegramAlertAt?: Date;
   /** Last offline/shutdown alert. Compared with lastSeenAt to alert once per outage. */
   lastTelegramOfflineAlertAt?: Date;
+  /** Last time a Chatwork overload alert was sent (per-server cooldown). */
+  lastChatworkAlertAt?: Date;
+  /** Last Chatwork offline/shutdown alert. Compared with lastSeenAt to alert once per outage. */
+  lastChatworkOfflineAlertAt?: Date;
   registeredAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +50,8 @@ const AgentSchema = new Schema<IAgent>(
     lastSeenAt: { type: Date },
     lastTelegramAlertAt: { type: Date },
     lastTelegramOfflineAlertAt: { type: Date },
+    lastChatworkAlertAt: { type: Date },
+    lastChatworkOfflineAlertAt: { type: Date },
     registeredAt: { type: Date, default: () => new Date() },
   },
   { timestamps: true }

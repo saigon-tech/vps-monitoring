@@ -98,6 +98,15 @@ Then visit `http://localhost:3000`.
 | `NEXT_PUBLIC_APP_URL`          | yes      | `http://localhost:3000`                | Public URL where the dashboard is reachable. |
 | `AGENT_OFFLINE_AFTER_SECONDS`  | no       | `60`                                   | After how many seconds an agent is "offline". |
 
+### Chatwork overload alerts
+
+Optionally send the same overload/offline alerts to a Chatwork room. Configure via environment variables:
+
+| Variable                       | Required | Description                                  |
+| ------------------------------ | -------- | -------------------------------------------- |
+| `CHATWORK_API_KEY`             | no       | Chatwork API token (from account settings).  |
+| `CHATWORK_ROOM_ID`             | no       | Numeric room ID to send messages to.          |
+
 ### Telegram overload alerts
 
 Configure the bot token, chat id, thresholds (CPU, RAM, disk `/`), and per-server cooldown in **Settings** in the web UI. Values are stored in MongoDB (not in environment variables). Each agent heartbeat is checked: if CPU, RAM, or disk (/) is at or above the configured thresholds, one HTML message is sent to Telegram. The same server will not receive another alert until the cooldown period passes (even if multiple metrics are high).

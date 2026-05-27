@@ -6,6 +6,7 @@ import { env } from '@/lib/env';
 import { Agent } from '@/lib/models/Agent';
 import { Metric } from '@/lib/models/Metric';
 import { sendTelegramDisconnectIfNeeded, sendTelegramOverloadIfNeeded } from '@/lib/telegram-alerts';
+import { sendChatworkDisconnectIfNeeded, sendChatworkOverloadIfNeeded } from '@/lib/chatwork-alerts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -84,6 +85,21 @@ export async function POST(req: Request) {
     if (sent) {
       agent.lastTelegramOfflineAlertAt = now;
     }
+    const chatworkSent = await sendChatworkDisconnectIfNeeded(
+      {
+        agentId: agent.agentId,
+        hostname: agent.hostname,
+        label: agent.label,
+        publicIp: agent.publicIp,
+        lastSeenAt: previousLastSeenAt ?? now,
+        lastChatworkOfflineAlertAt: agent.lastChatworkOfflineAlertAt,
+      },
+      env.APP_URL,
+      'shutdown'
+    );
+    if (chatworkSent) {
+      agent.lastChatworkOfflineAlertAt = now;
+    }
     await agent.save();
     return NextResponse.json({ ok: true });
   }
@@ -138,6 +154,34 @@ export async function POST(req: Request) {
   );
   if (sent) {
     agent.lastTelegramAlertAt = now;
+    await agent.save();
+  }
+
+  const chatworkSent = await sendChatworkOverloadIfNeeded(
+    {
+      agentId: agent.agentId,
+      hostname: agent.hostname,
+      label: agent.label,
+      publicIp: agent.publicIp,
+      lastChatworkAlertAt: agent.lastChatworkAlertAt,
+    },
+    {
+      cpuPercent: parsed.data.cpuPercent,
+      memUsedBytes: parsed.data.memUsedBytes,
+      memTotalBytes: parsed.data.memTotalBytes,
+      diskUsedBytes: parsed.data.diskUsedBytes,
+      diskTotalBytes: parsed.data.diskTotalBytes,
+    },
+    {
+      cpu: appSettings.alertCpuPercent,
+      ram: appSettings.alertRamPercent,
+      disk: appSettings.alertDiskPercent,
+    },
+    appSettings.telegramCooldownSeconds * 1000,
+    env.APP_URL
+  );
+  if (chatworkSent) {
+    agent.lastChatworkAlertAt = now;
     await agent.save();
   }
 

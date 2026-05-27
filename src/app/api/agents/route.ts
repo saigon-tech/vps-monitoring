@@ -9,6 +9,7 @@ import {
   sendTelegramDisconnectIfNeeded,
   shouldSendTelegramDisconnectAlert,
 } from '@/lib/telegram-alerts';
+import { sendChatworkDisconnectIfNeeded } from '@/lib/chatwork-alerts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,6 +103,13 @@ export async function GET() {
         await Agent.updateOne(
           { agentId: agent.agentId },
           { $set: { lastTelegramOfflineAlertAt: offlineAlertAt } }
+        );
+      }
+      const cwSent = await sendChatworkDisconnectIfNeeded(agent, env.APP_URL, 'offline');
+      if (cwSent) {
+        await Agent.updateOne(
+          { agentId: agent.agentId },
+          { $set: { lastChatworkOfflineAlertAt: offlineAlertAt } }
         );
       }
     }

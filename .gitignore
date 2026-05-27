@@ -11,3 +11,6 @@ build
 .turbo
 out
 coverage
+.playwright-mcp/
+.claude
+.serena

@@ -28,9 +28,11 @@ type AlertSettingsResponse = {
 export function SettingsClient({
   appUrl,
   offlineAfterSeconds,
+  chatworkConfigured,
 }: {
   appUrl: string;
   offlineAfterSeconds: number;
+  chatworkConfigured: boolean;
 }) {
   const { data } = useSWR<{ user: { username: string } | null }>('/api/auth/me', fetcher);
   const {
@@ -56,6 +58,7 @@ export function SettingsClient({
   const [alertsHydrated, setAlertsHydrated] = useState(false);
   const [savingAlerts, setSavingAlerts] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingCw, setTestingCw] = useState(false);
 
   useEffect(() => {
     if (!alertData || alertsHydrated) return;
@@ -152,6 +155,15 @@ export function SettingsClient({
     setTesting(false);
     if (!res.ok) return toast.error(out.error ?? 'Gửi thử thất bại');
     toast.success('Đã gửi tin thử — kiểm tra Telegram');
+  };
+
+  const sendTestChatwork = async () => {
+    setTestingCw(true);
+    const res = await fetch('/api/settings/alerts/test?channel=chatwork', { method: 'POST' });
+    const out = await res.json().catch(() => ({}));
+    setTestingCw(false);
+    if (!res.ok) return toast.error(out.error ?? 'Gửi thử Chatwork thất bại');
+    toast.success('Đã gửi tin thử — kiểm tra Chatwork');
   };
 
   const configured =
@@ -374,6 +386,38 @@ export function SettingsClient({
           </>
         )}
       </form>
+
+      <div className="card card-pad">
+        <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+          <Send className="h-4 w-4 text-ink-muted" />
+          Chatwork — cảnh báo quá tải & mất kết nối
+        </h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Cấu hình qua biến môi trường <code>CHATWORK_API_KEY</code> và <code>CHATWORK_ROOM_ID</code> trong file <code>.env</code>.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-ink-soft">Trạng thái:</span>
+          {chatworkConfigured ? (
+            <span className="chip-success">Đã cấu hình (API key + Room ID)</span>
+          ) : (
+            <span className="chip-muted">Chưa cấu hình — thêm CHATWORK_API_KEY và CHATWORK_ROOM_ID vào .env</span>
+          )}
+        </div>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            className="btn-secondary inline-flex items-center gap-2"
+            disabled={testingCw || !chatworkConfigured}
+            onClick={sendTestChatwork}
+            title={!chatworkConfigured ? 'Cần CHATWORK_API_KEY + CHATWORK_ROOM_ID trong .env' : undefined}
+          >
+            {testingCw ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Gửi tin thử Chatwork
+          </button>
+        </div>
+      </div>
 
       <div className="card card-pad">
         <h2 className="text-base font-semibold text-ink">Dashboard</h2>
